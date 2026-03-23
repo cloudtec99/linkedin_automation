@@ -1,0 +1,31 @@
+name: 📝 Daily LinkedIn Post
+
+on:
+  schedule:
+    - cron: '30 4 * * 1-5'   # 10:00 AM IST = 04:30 UTC, Mon–Fri
+  workflow_dispatch:
+
+jobs:
+  generate-approve-publish:
+    runs-on: ubuntu-latest
+    # Give enough time for you to approve (up to 60 min)
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Generate → Notify → Wait for approval → Publish
+        run: node scripts/main.js
+        env:
+          GROQ_API_KEY:          ${{ secrets.GROQ_API_KEY }}
+          TELEGRAM_BOT_TOKEN:    ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:      ${{ secrets.TELEGRAM_CHAT_ID }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN:   ${{ secrets.LINKEDIN_PERSON_URN }}

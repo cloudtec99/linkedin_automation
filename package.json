@@ -1,15 +1,9 @@
 {
   "name": "linkedin-groq-bot",
-  "version": "1.0.0",
-  "description": "Daily LinkedIn posts via Groq (free) + Telegram approval + GitHub Actions",
-  "main": "webhook-server.js",
+  "version": "3.0.0",
+  "description": "Daily LinkedIn posts — Groq + Telegram + GitHub Actions. No server needed.",
   "scripts": {
-    "start":    "node webhook-server.js",
-    "generate": "node scripts/generate.js"
-  },
-  "dependencies": {
-    "dotenv":   "^16.4.0",
-    "express":  "^4.19.0"
+    "start": "node scripts/main.js"
   },
   "engines": {
     "node": ">=18.0.0"
