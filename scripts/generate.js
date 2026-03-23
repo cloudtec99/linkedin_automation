@@ -98,7 +98,7 @@ function todaysPick() {
 function callGroq(prompt) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      model:       'llama-3.3-70b-versatile',
+      model:       'llama-3.1-70b-versatile',
       max_tokens:  900,
       temperature: 0.82,
       messages:    [{ role: 'user', content: prompt }],
@@ -193,9 +193,47 @@ Return ONLY the post text. No intro, no explanation, no quotes around it.`;
   console.log(`🆔  Post ID    : ${postId}`);
   console.log(`💰  API Cost   : $0.00`);
 
+  // ── Save post to Railway webhook server (survives restarts) ─────────
+  const railwayUrl = process.env.RAILWAY_URL;
+  if (railwayUrl) {
+    await storePost(railwayUrl, postId, postContent, `${topic.emoji} ${topic.label} — ${subtopic}`);
+  } else {
+    console.log('⚠️  RAILWAY_URL not set — post will not be stored on server');
+  }
+
   setOutput('post_content', postContent);
   setOutput('post_topic',   `${topic.emoji} ${topic.label} — ${subtopic}`);
   setOutput('post_id',      postId);
+}
+
+// ── Store post on Railway server ────────────────────────────────────
+function storePost(baseUrl, postId, content, topic) {
+  return new Promise((resolve) => {
+    const body = JSON.stringify({ post_id: postId, post_content: content, post_topic: topic });
+    const url  = new URL('/store', baseUrl);
+    const isHttps = url.protocol === 'https:';
+    const lib  = isHttps ? require('https') : require('http');
+
+    const req = lib.request({
+      hostname: url.hostname,
+      path:     url.pathname,
+      method:   'POST',
+      headers:  { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+    }, res => {
+      let r = '';
+      res.on('data', c => (r += c));
+      res.on('end', () => {
+        console.log(`📦  Post stored on server: ${res.statusCode}`);
+        resolve();
+      });
+    });
+    req.on('error', err => {
+      console.warn(`⚠️  Could not store post on server: ${err.message}`);
+      resolve(); // don't fail the whole workflow
+    });
+    req.write(body);
+    req.end();
+  });
 }
 
 main().catch(err => {

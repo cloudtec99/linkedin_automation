@@ -96,3 +96,6 @@ main().catch(err => {
   console.error('❌  notify.js failed:', err.message);
   process.exit(1);
 });
+
+// NOTE: notify.js already sends post via Telegram.
+// The store endpoint call is handled in generate.js via RAILWAY_URL env var.
