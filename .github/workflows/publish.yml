@@ -1,0 +1,42 @@
+name: 🚀 Publish Post to LinkedIn
+
+on:
+  repository_dispatch:
+    types: [publish-post]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Publish to LinkedIn
+        id: publish
+        run: node scripts/publish.js
+        env:
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          LINKEDIN_PERSON_URN:   ${{ secrets.LINKEDIN_PERSON_URN }}
+          POST_CONTENT:          ${{ github.event.client_payload.post_content }}
+          POST_ID:               ${{ github.event.client_payload.post_id }}
+
+      - name: Notify Telegram — success
+        if: success()
+        run: node scripts/notify-result.js success
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+          LINKEDIN_URL:       ${{ steps.publish.outputs.linkedin_url }}
+
+      - name: Notify Telegram — failed
+        if: failure()
+        run: node scripts/notify-result.js failed
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
