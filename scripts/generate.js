@@ -98,7 +98,7 @@ function todaysPick() {
 function callGroq(prompt) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
-      model:       'llama-3.1-70b-versatile',
+      model:       'llama-3.3-70b-versatile',
       max_tokens:  900,
       temperature: 0.82,
       messages:    [{ role: 'user', content: prompt }],
